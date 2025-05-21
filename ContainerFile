@@ -1,0 +1,6 @@
+ARG LLAMA_STACK_VERSION=latest
+ARG VECTOR_DB_STORE=faiss_store.db
+FROM ansible-chatbot:${LLAMA_STACK_VERSION}
+
+RUN mkdir -p /.llama/distributions/ansible-chatbot
+COPY ${VECTOR_DB_STORE} /.llama/distributions/ansible-chatbot

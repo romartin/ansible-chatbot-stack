@@ -1,0 +1,54 @@
+# TODO
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: llama-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: llama-stack-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: llama-stack
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: llama-stack
+    spec:
+      containers:
+      - name: llama-stack
+        image: localhost/llama-stack-run-k8s:latest
+        imagePullPolicy: IfNotPresent
+        command: ["python", "-m", "llama_stack.distribution.server.server", "--config", "/app/config.yaml"]
+        ports:
+          - containerPort: 5000
+        volumeMounts:
+          - name: llama-storage
+            mountPath: /root/.llama
+      volumes:
+      - name: llama-storage
+        persistentVolumeClaim:
+          claimName: llama-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: llama-stack-service
+spec:
+  selector:
+    app.kubernetes.io/name: llama-stack
+  ports:
+  - protocol: TCP
+    port: 5000
+    targetPort: 5000
+  type: ClusterIP
